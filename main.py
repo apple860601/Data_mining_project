@@ -35,7 +35,9 @@ data=data.fillna(0)
 
 X = data[["Attribute2","Attribute3","Attribute4","Attribute5","Attribute6","Attribute7","Attribute8","Attribute9","Attribute10","Attribute11","Attribute12","Attribute13","Attribute14","Attribute15","Attribute16"]]
 y = data['Attribute17']
-X_train, X_test, y_train, y_test = train_test_split(X,y)
+
+
+X_train, X_test, y_train, y_test = train_test_split(X,y,random_state=)
 
 from sklearn.svm import SVC
 
