@@ -1,11 +1,10 @@
-from xgboost import XGBClassifier,XGBRegressor
+from sklearn import tree
 import pandas as pd
 import numpy as np 
 from sklearn.model_selection import train_test_split
-import datetime
-from itertools import product
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import GroupKFold
+import graphviz
+import seaborn
+from matplotlib import pyplot as plt
 
 def convert_wind(w):
     r=-1
@@ -31,11 +30,6 @@ def conver_date(d,first_date):
     # d1=datetime.datetime.strptime(d,"%Y-%m-%d")
     return (d - first_date).days
 
-params = { 'max_depth': [3,6],
-           'learning_rate': [ 0.05, 0.1],
-           'n_estimators': [100, 500],
-           'colsample_bytree': [0.3, 0.7]}
-
 data = pd.read_csv("train.csv")
 data["Attribute1"] = pd.to_datetime(data["Attribute1"])
 
@@ -53,24 +47,6 @@ X = data[["Attribute3","Attribute4","Attribute5","Attribute6","Attribute7","Attr
 y = data['Attribute17']
 X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.7)
 
-# for learning,estimators,max_depth in product(range(0,60,10),range(0,51,5),range(1,11)):
-    # 建立 XGBClassifier 模型
-    # xgboostModel = XGBClassifier(n_estimators=estimators, learning_rate= learning/100,max_depth=10,tree_method='gpu_hist', gpu_id=0)
-
-xg2 = XGBClassifier(random_state=1,tree_method='gpu_hist', gpu_id=0)
-xgboostModel = GridSearchCV(estimator=xg2, 
-                param_grid=params,
-                scoring='neg_mean_squared_error', 
-                verbose=3)
-# 使用訓練資料訓練模型
-xgboostModel.fit(X_train, y_train)
-# 使用訓練資料預測分類
-predicted = xgboostModel.predict(X_train)
-
-# 預測成功的比例
-# print('n_estimators=',i,' 訓練集: ',xgboostModel.score(X_train,y_train))
-# print('n_estimators=',i,' 測試集: ',xgboostModel.score(X_test,y_test))
-
 test_data=pd.read_csv("test.csv")
 test_data["Attribute1"]=pd.to_datetime(test_data["Attribute1"])
 # print(test_data["Attribute1"].min())
@@ -85,6 +61,19 @@ a=0
 ans=list(pd.read_csv("ex_submit.csv")["ans"])
 input=test_data[["Attribute3","Attribute4","Attribute5","Attribute6","Attribute7","Attribute12","Attribute14","Attribute15","Attribute16"]]
 
-print('n_estimators=',' 實際測試: ',xgboostModel.score(input,ans))
-print()
-    # print('n_estimators=',i,' 實際測試: ',xgboostModel.predict_proba(input))
+
+# for i in range(1,11):
+clf=tree.DecisionTreeClassifier(criterion='gini').fit(X_train,y_train)
+dot_data = tree.export_graphviz(clf, 
+                filled=True, 
+                feature_names=list(X_train),
+                class_names=['No rain','rain'],
+                special_characters=True)
+graph = graphviz.Source(dot_data)
+# graph.format = 'png'
+# graph.render('output-graph.gv', view=True)
+clf.predict(X_test)
+# print(clf.score(X_test,y_test))
+
+clf.predict(input)
+print(clf.score(input,ans))
