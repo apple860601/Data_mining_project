@@ -17,11 +17,11 @@ def convert_wind(w):
             if i == "E":
                 angle+=0
             if i == "W":
-                angle+=np.pi
+                angle+=180
             if i == "N":
-                angle+=np.pi/2
+                angle+=90
             if i == "S":
-                angle+=np.pi*3/2
+                angle+=270
         angle=angle/(len(w))
     except:
         pass
