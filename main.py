@@ -31,7 +31,7 @@ def convert_wind(w):
 def train_module(x,y,C,gamma,return_dict,procnum):
     X_train, X_test, y_train, y_test = train_test_split(x,y,train_size=0.4)
 
-    grid=SVC(C=C,gamma=gamma,class_weight="balanced" )
+    grid=SVC(C=C,gamma=gamma )
 
     #利用剛剛設定的參數來找到最適合的模型
     grid.fit(X_train,y_train)
@@ -46,6 +46,8 @@ def train_module(x,y,C,gamma,return_dict,procnum):
 
 #將資料分成訓練組及測試組
 from sklearn.model_selection import train_test_split
+from matplotlib import pyplot as plt
+from sklearn.decomposition import PCA
 
 if __name__ == '__main__':
     # freeze_support()
@@ -59,6 +61,12 @@ if __name__ == '__main__':
 
     X = data[["Attribute2","Attribute3","Attribute4","Attribute5","Attribute6","Attribute7","Attribute8","Attribute9","Attribute10","Attribute11","Attribute12","Attribute13","Attribute14","Attribute15","Attribute16"]]
     y = data['Attribute17']
+
+    d_arr=[]
+
+    pca = PCA(n_components=6)
+    X_reduced = pca.fit_transform(X)
+
     manager = mp.Manager()
     
     i=0
@@ -73,7 +81,7 @@ if __name__ == '__main__':
         train_para[i]["C"]=C
         train_para[i]["gamma"]=gamma
         for j in range(5):
-            p=mp.Process(target=train_module,args=(X,y,C,gamma,return_dict,j))
+            p=mp.Process(target=train_module,args=(X_reduced,y,C,gamma,return_dict,j))
             p_list.append(p)
             p.start()
 
@@ -92,10 +100,6 @@ if __name__ == '__main__':
     print(train_para)
 
 
-    # train_para.mean()
-
-
-
     #利用剛剛的最佳參考再重新預測測試組
     # grid_predictions = grid.predict(test_data[["Attribute2","Attribute3","Attribute4","Attribute5","Attribute6","Attribute7","Attribute8","Attribute9","Attribute10","Attribute11","Attribute12","Attribute13","Attribute14","Attribute15","Attribute16"]])
 
@@ -109,8 +113,11 @@ if __name__ == '__main__':
     a=0
     ans=list(pd.read_csv("ex_submit.csv")["ans"])
     input=test_data[["Attribute2","Attribute3","Attribute4","Attribute5","Attribute6","Attribute7","Attribute8","Attribute9","Attribute10","Attribute11","Attribute12","Attribute13","Attribute14","Attribute15","Attribute16"]]
+    
+    pca = PCA(n_components=6)
+    input_reduced = pca.fit_transform(input)
     for grid in train_para['grid']:
-        print(grid.score(input,ans))
+        print(grid.score(input_reduced,ans))
         # train_para['result'][a]=grid.score(input,ans)
 
     
